@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Strichliste Getränke</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      color-scheme: light dark;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: #f5f5f5;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 4px;
+      font-size: 1.4rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 16px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      font-size: 0.9rem;
+    }
+
+    .summary strong {
+      font-size: 1rem;
+    }
+
+    .summary button {
+      border: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      background-color: #eee;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 380px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background-color: #ffffff;
+      border-radius: 14px;
+      padding: 10px 10px 12px 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .count {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin: 4px 0;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    button {
+      appearance: none;
+      -webkit-appearance: none;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      background-color: #e5e5e5;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .btn-plus {
+      background-color: #d0f0d0;
+    }
+
+    .btn-minus {
+      background-color: #f0d0d0;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      font-size: 0.75rem;
+      color: #777;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Strichliste</h1>
+    <div class="subtitle">Bier, Drinks und Shots</div>
+
+    <div class="summary">
+      <div>
+        <div>Gesamt</div>
+        <strong id="total-count">0</strong>
+      </div>
+      <button id="reset-button">Reset</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Kleines Bier</div>
+          <div class="card-subtitle">3 dl</div>
+        </div>
+        <div class="count" id="count-beer_small">0</div>
+        <div class="buttons">
+          <button class="btn-plus" onclick="inc('beer_small')">+1</button>
+          <button class="btn-minus" onclick="dec('beer_small')">−1</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Grosses Bier</div>
+          <div class="card-subtitle">5 dl</div>
+        </div>
+        <div class="count" id="count-beer_large">0</div>
+        <div class="buttons">
+          <button class="btn-plus" onclick="inc('beer_large')">+1</button>
+          <button class="btn-minus" onclick="dec('beer_large')">−1</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Drink</div>
+          <div class="card-subtitle">Longdrink</div>
+        </div>
+        <div class="count" id="count-drink">0</div>
+        <div class="buttons">
+          <button class="btn-plus" onclick="inc('drink')">+1</button>
+          <button class="btn-minus" onclick="dec('drink')">−1</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Shot</div>
+          <div class="card-subtitle">Schnaps</div>
+        </div>
+        <div class="count" id="count-shot">0</div>
+        <div class="buttons">
+          <button class="btn-plus" onclick="inc('shot')">+1</button>
+          <button class="btn-minus" onclick="dec('shot')">−1</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Werte werden lokal im Browser gespeichert.
+    </div>
+  </div>
+
+  <script>
+    const KEY = "strichliste_v1";
+
+    const counts = JSON.parse(localStorage.getItem(KEY)) || {
+      beer_small: 0,
+      beer_large: 0,
+      drink: 0,
+      shot: 0
+    };
+
+    function save() {
+      localStorage.setItem(KEY, JSON.stringify(counts));
+    }
+
+    function update() {
+      document.getElementById("count-beer_small").textContent = counts.beer_small;
+      document.getElementById("count-beer_large").textContent = counts.beer_large;
+      document.getElementById("count-drink").textContent = counts.drink;
+      document.getElementById("count-shot").textContent = counts.shot;
+
+      document.getElementById("total-count").textContent =
+        counts.beer_small + counts.beer_large + counts.drink + counts.shot;
+    }
+
+    function inc(key) {
+      counts[key]++;
+      save();
+      update();
+    }
+
+    function dec(key) {
+      counts[key] = Math.max(0, counts[key] - 1);
+      save();
+      update();
+    }
+
+    document.getElementById("reset-button").onclick = () => {
+      if (confirm("Alles zurücksetzen?")) {
+        counts.beer_small = 0;
+        counts.beer_large = 0;
+        counts.drink = 0;
+        counts.shot = 0;
+        save();
+        update();
+      }
+    };
+
+    update();
+  </script>
+</body>
+</html>
